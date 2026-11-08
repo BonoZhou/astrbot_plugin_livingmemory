@@ -15,9 +15,9 @@ AstrBot `4.24.2` or later is recommended. Older versions can still run the plugi
 | Area | Purpose |
 | --- | --- |
 | Memory management | Inspect and filter memories; edit summaries, topics, key facts, status, and importance; batch-delete; import and export |
-| Recall debugging | Enter a query and inspect results, final scores, and the retrieval routes that matched |
+| Recall debugging | Enter a query and inspect returned memories and ranking |
 | Graph view | Browse entities, relationships, and memory connections |
-| System status | Review active, archived, and deleted counts plus graph, atom, importance, and session statistics (sessions ordered by memory count); the consolidation panel carries the run action, and backups are newest first |
+| System status | Review active, archived, and deleted counts plus graph, atom, importance, and session statistics |
 | Prompt management | Browse prompts by category, edit overrides, identify customized templates, and restore or load defaults |
 
 ## Appearance
@@ -40,8 +40,7 @@ The memory page follows **filter → select → act**. Keyword and session input
 Import and export live in a separate collapsible area with an explicit export scope: selected rows when a selection exists, otherwise **all memories regardless of list filters**. Import progresses through reading, preview, confirmation and writing, with visible feedback at each step; empty previews never proceed to a write. Related controls and page switching remain locked during bulk operations and transfers to prevent duplicate submissions or changing the operation's scope.
 
 - Editing a summary, topic, or key fact rebuilds that memory's embedding, BM25, graph, atom, and related derived data. Status-only or importance-only edits do not unconditionally rebuild every index.
-- Each memory labels its writer below the summary: Agent-written, imported, or re-summarized; unmarked memories come from auto-summarization. Summaries judged low quality are marked separately. The detail panel shows the same origin, the reason an agent recorded the memory, and the previous ID after a content edit changes it.
-- Memories above the source-retention threshold show source messages in the detail panel, collapsed by default and marked where the assistant spoke. When at least two source messages are available, the Dashboard can call the LLM to replace the memory with a new summary.
+- Memories above the source-retention threshold show source messages in the detail panel. When at least two source messages are available, the Dashboard can call the LLM to replace the memory with a new summary.
 - Changing status to `archived` removes a memory from normal recall indexes while retaining its source document. Changing it back to `active` regenerates its embedding and derived indexes.
 - Selection checkboxes support batch deletion from the current list. Export includes only selected memories when a selection exists.
 
@@ -51,13 +50,13 @@ Deletion is permanent. Archive memories that may need to be restored later. Rest
 
 ## Prompt management
 
-The prompt page shows each template's purpose, variables, and default or customized state; templates that must emit JSON carry a JSON badge next to the name, with the constraint on hover. The editor can save an override, load default content for further editing, or remove an override and restore the built-in default; **Load default content** only appears for templates that are already customized. Templates marked as JSON must remain valid JSON or saving is rejected.
+The prompt page shows each template's purpose, variables, and default or customized state. The editor can save an override, load default content for further editing, or remove an override and restore the built-in default. Templates marked as JSON must remain valid JSON or saving is rejected.
 
 Prompt overrides live in the plugin data directory and do not modify repository templates, so they remain in place across plugin upgrades.
 
 Memory and prompt editors ask how to handle unsaved changes before closing, cancelling or switching pages. **Keep editing** retains the draft; **Discard changes** exits. **Load default content** only fills the prompt editor until Save is clicked. The editor cannot switch to a different prompt while saving.
 
-Recall supports Ctrl / Cmd + Enter. Each result shows the fused final score plus the per-route scores of the retrieval routes that actually matched (document keyword, document vector, graph keyword, graph vector), so you can tell which path recalled a memory. The result header echoes the `k` and session filter that produced it. A new request clears previous results and displays failures explicitly, so old cards cannot be mistaken for the new query's output. The graph toolbar pairs the search box with its action; the session scope input offers suggestions from the current session statistics and applies on Enter or by pressing **Full Graph** again. Both work on mobile.
+Recall supports Ctrl / Cmd + Enter. A new request clears previous results and displays failures explicitly, so old cards cannot be mistaken for the new query's output. Graph search and memory-ID inputs sit beside their corresponding actions, and session scope remains available on mobile.
 
 ## What the graph view is good for
 
@@ -69,12 +68,10 @@ Recall supports Ctrl / Cmd + Enter. Each result shows the fused final score plus
 | Aging risk | Low-importance relationships that have not been accessed for a long time |
 
 ::: tip
-The graph page shows a constrained subgraph of recent memories by default (node/edge caps apply). Click the **Full Graph** button to load every node and relation. The full graph still obeys server-side caps; when truncated, the legend reports **Nodes visible / total** instead of contradicting the counters above.
+The graph page shows a constrained subgraph of recent memories by default (node/edge caps apply). Click the **Full Graph** button to load every node and relation.
 :::
 
 In 2.7.0-beta.1, zoomed reading, hover and node selection pause ambient movement and stabilize label priority and collision bounds. Settled reading stops idle drawing; overview motion resumes when zoomed out with no hover or selection. Lower-priority labels may be omitted when space is limited; select a node to read its full details.
-
-Selecting a node lists the memories it connects to, and any of them opens its memory detail directly. Node details on the graph page are not modal, so you can select several nodes in a row to compare them. The reverse path exists too: the **Knowledge Graph Context** section of a memory detail offers **Locate in graph**, which switches to the graph page and focuses that memory's subgraph without typing an ID.
 
 ::: tip
 Dashboard operations reuse the plugin runtime MemoryEngine and GraphStore, so they do not bypass backend data safety logic.

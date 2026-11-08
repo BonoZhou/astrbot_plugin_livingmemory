@@ -21,6 +21,7 @@
           <span class="brand-mark">LM</span>
           <span class="brand-name"><strong>Living</strong><strong>Memory</strong></span>
         </div>
+        <div class="sidebar-coordinate" aria-hidden="true">SYSTEM / 02</div>
         <nav class="sidebar-nav">
           <button class="nav-item active" data-page="graph" data-i18n-aria="nav.graph">
             <i data-lucide="network" aria-hidden="true"></i>
@@ -71,8 +72,7 @@
           <header class="page-header">
             <div class="page-heading"><span class="page-index">01</span><span class="page-title" data-i18n="nav.graph">Knowledge Graph</span></div>
             <div class="page-actions">
-              <input type="text" id="graph-session-filter" list="graph-session-options" data-i18n-aria="graph.sessionPh" class="input input-sm" data-i18n-placeholder="graph.sessionPh" placeholder="Session ID" style="width:180px" />
-              <datalist id="graph-session-options"></datalist>
+              <input type="text" id="graph-session-filter" data-i18n-aria="graph.sessionPh" class="input input-sm" data-i18n-placeholder="graph.sessionPh" placeholder="Session ID" style="width:180px" />
               <button class="btn btn-secondary btn-sm" id="graph-overview-btn" data-i18n-aria="graph.overviewBtn">
                 <i data-lucide="layout-dashboard" aria-hidden="true"></i>
                 <span data-i18n="graph.overviewBtn">Overview</span>
@@ -87,7 +87,8 @@
               <div class="stat-pill"><div class="stat-pill-value" id="gs-sessions">--</div><div class="stat-pill-label" data-i18n="stats.sessions">sessions</div></div>
             </div>
             <div class="graph-canvas-container" style="flex:1">
-              <div class="graph-canvas-state" id="graph-canvas-state"></div>
+              <div class="graph-canvas-coordinate" aria-hidden="true">LIVE GRAPH / XY</div>
+              <div class="graph-canvas-state" id="graph-canvas-state" data-i18n="graph.canvasDefault">Loading graph overview...</div>
               <div id="graph-canvas" class="graph-canvas"></div>
             </div>
             <div class="graph-legend" id="graph-legend"></div>
@@ -97,6 +98,13 @@
                 <button class="btn btn-primary btn-sm" id="graph-search-btn">
                   <i data-lucide="search" aria-hidden="true"></i>
                   <span data-i18n="graph.searchBtn">Search</span>
+                </button>
+              </div>
+              <div class="graph-operation">
+                <input type="text" id="graph-memory-id" data-i18n-aria="graph.memoryIdPh" class="input input-sm" data-i18n-placeholder="graph.memoryIdPh" placeholder="Memory ID" style="width:120px" />
+                <button class="btn btn-secondary btn-sm" id="graph-focus-btn">
+                  <i data-lucide="focus" aria-hidden="true"></i>
+                  <span data-i18n="graph.focusBtn">Focus</span>
                 </button>
               </div>
             </div>
@@ -223,7 +231,7 @@
                 </label>
                 <div class="pagination-controls">
                   <button class="btn btn-sm btn-ghost" id="mem-prev" disabled><i data-lucide="arrow-left" aria-hidden="true"></i><span data-i18n="pagination.prev">Previous</span></button>
-                  <span class="pagination-info" id="mem-pagination-info"></span>
+                  <span class="pagination-info" id="mem-pagination-info" data-i18n="common.page">Page 1/1 · 0 total</span>
                   <button class="btn btn-sm btn-ghost" id="mem-next" disabled><span data-i18n="pagination.next">Next</span><i data-lucide="arrow-right" aria-hidden="true"></i></button>
                 </div>
               </div>
@@ -256,12 +264,11 @@
             </div>
             <p class="workflow-hint" data-i18n="flow.recallShortcut">Ctrl / Cmd + Enter to run recall.</p>
             <div class="recall-results-header hidden" id="recall-stats">
-              <span id="recall-count-text"></span>
+              <span id="recall-count-text">0 results</span>
               <span class="text-tertiary" id="recall-time-text"></span>
-              <span class="text-tertiary" id="recall-context-text"></span>
             </div>
             <div id="recall-feedback" class="request-feedback" role="status" aria-live="polite" hidden></div>
-            <div id="recall-results" aria-busy="false"><div class="table-empty" data-i18n="recall.empty">No results · Enter a query and run recall</div></div>
+            <div id="recall-results" aria-busy="false"></div>
           </div>
         </section>
 
@@ -271,10 +278,6 @@
             <div class="page-heading"><span class="page-index">04</span><span class="page-title" data-i18n="nav.system">System Overview</span></div>
           </header>
           <div class="page-body">
-            <div id="system-feedback" class="request-feedback" role="status" aria-live="polite" hidden>
-              <span id="system-feedback-message"></span>
-              <button id="system-retry" class="btn btn-sm btn-secondary" type="button" data-i18n="common.retry" hidden>Retry</button>
-            </div>
             <div class="stat-cards" id="system-stat-cards">
               <div class="stat-card"><div class="stat-card-value" id="ss-total">--</div><div class="stat-card-label" data-i18n="stats.total">Total Memories</div></div>
               <div class="stat-card"><div class="stat-card-value" id="ss-active">--</div><div class="stat-card-label" data-i18n="stats.active">Active</div></div>
@@ -293,6 +296,10 @@
                 <div class="bar-chart" id="atom-chart"></div>
               </div>
             </div>
+            <div class="system-panel mb-6" style="margin-top:0">
+              <div class="system-panel-title" data-i18n="system.activeSessions">Active Sessions</div>
+              <div class="session-list" id="session-list"></div>
+            </div>
             <div class="system-panel mb-6">
               <div class="system-panel-title" data-i18n="system.consolidationTitle">Memory Consolidation</div>
               <div class="consolidation-meta" id="consolidation-meta"></div>
@@ -305,10 +312,6 @@
                 <span data-i18n="system.consolidationRun">Run Now</span>
               </button>
               <span class="text-tertiary" id="cons-run-result" style="margin-left:10px;font-size:12px"></span>
-            </div>
-            <div class="system-panel mb-6" style="margin-top:0">
-              <div class="system-panel-title" data-i18n="system.sessionsTitle">Sessions</div>
-              <div class="session-list" id="session-list"></div>
             </div>
             <div class="system-panel">
               <div class="system-panel-title" data-i18n="system.versionBackups">Version Backups</div>
@@ -323,17 +326,14 @@
             <div class="page-heading"><span class="page-index">05</span><span class="page-title" data-i18n="nav.prompts">Prompt Management</span></div>
           </header>
           <div class="page-body">
-            <div id="prompt-feedback" class="request-feedback" role="status" aria-live="polite" hidden>
-              <span id="prompt-feedback-message"></span>
-              <button id="prompt-retry" class="btn btn-sm btn-secondary" type="button" data-i18n="common.retry" hidden>Retry</button>
-            </div>
             <div id="prompt-content"></div>
             <div class="prompt-editor hidden" id="prompt-editor">
               <div class="prompt-editor-header">
+                <span class="prompt-editor-subtitle" data-i18n="prompt.editTitle">Edit Prompt</span>
                 <span class="prompt-editor-title" id="prompt-editor-title"></span>
                 <span class="prompt-editor-status" id="prompt-editor-status"></span>
               </div>
-              <div class="prompt-editor-vars-row" id="prompt-editor-vars-row">
+              <div class="prompt-editor-vars-row">
                 <span class="prompt-editor-vars-label" data-i18n="prompt.variables">Variables</span>
                 <span id="prompt-editor-vars"></span>
               </div>
@@ -341,7 +341,7 @@
               <p id="prompt-editor-feedback" class="workflow-hint" role="status" hidden></p>
               <div class="prompt-editor-actions">
                 <button class="btn btn-secondary" id="prompt-cancel-btn"><i data-lucide="x" aria-hidden="true"></i><span data-i18n="common.cancel">Cancel</span></button>
-                <button class="btn btn-secondary" id="prompt-reset-btn"><i data-lucide="rotate-ccw" aria-hidden="true"></i><span data-i18n="prompt.reset">Load default content</span></button>
+                <button class="btn btn-secondary btn-sm" id="prompt-reset-btn"><i data-lucide="rotate-ccw" aria-hidden="true"></i><span data-i18n="prompt.reset">Load default content</span></button>
                 <button class="btn btn-primary" id="prompt-save-btn"><i data-lucide="save" aria-hidden="true"></i><span data-i18n="common.save">Save</span></button>
               </div>
             </div>
@@ -427,7 +427,7 @@
     </aside>
 
     <!-- Toast -->
-    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="toast" id="toast"></div>
 
     <script src="./graph-shared.js"></script>
     <script src="./graph-layout-core.js"></script>

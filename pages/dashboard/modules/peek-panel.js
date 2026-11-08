@@ -12,7 +12,6 @@ import {
   typeLabel,
   nodeBadge,
   metaItem,
-  originLabel,
   confirmDiscardChanges
 } from "./utils.js";
 
@@ -37,9 +36,8 @@ export class PeekPanel {
   /**
    * 打开侧边面板
    * @param {boolean} isWide - 是否使用宽模式
-   * @param {boolean} withOverlay - 是否加遮罩。图谱页连续对比节点时为 false
    */
-  open(isWide = false, withOverlay = true) {
+  open(isWide = false) {
     const panel = document.getElementById("peek-panel");
     panel.removeAttribute("inert");
     panel.setAttribute("aria-hidden", "false");
@@ -49,9 +47,7 @@ export class PeekPanel {
     } else {
       panel.classList.remove("wide");
     }
-    if (withOverlay) {
-      document.getElementById("peek-overlay").classList.add("visible");
-    }
+    document.getElementById("peek-overlay").classList.add("visible");
   }
 
   /**
@@ -150,8 +146,7 @@ export class PeekPanel {
     try {
       detail = await this.api.get("memories/detail", { memory_id: memoryId });
       if (generation !== this._detailGeneration) return;
-    } catch {
-      this.showToast(window.t("detail.loadFailed"), true);
+    } catch (_) {
       detail = null;
     }
     if (generation !== this._detailGeneration) return;
@@ -175,7 +170,6 @@ export class PeekPanel {
         topics: Array.isArray(rawMeta.topics) ? rawMeta.topics : [],
         update_history: Array.isArray(rawMeta.update_history) ? rawMeta.update_history : [],
         graph_context: null,
-        metadata: rawMeta,
       };
     }
 
@@ -218,11 +212,6 @@ export class PeekPanel {
         ? detail.metadata.consolidated_from
         : [];
     const graphCtx = detail.graph_context;
-    const meta = detail.metadata || {};
-    const origin = String(meta.memory_origin || "");
-    const memorizeReason = meta.memorize_reason ? String(meta.memorize_reason) : "";
-    const previousId = meta.previous_id != null && meta.previous_id !== "" ? meta.previous_id : "";
-    const quality = String(meta.summary_quality || "");
 
     document.getElementById("peek-badge").innerHTML = "";
     document.getElementById("peek-title").textContent = window.t("detail.memoryTitle", id);
@@ -234,9 +223,6 @@ export class PeekPanel {
     html += statusPill(status);
     html += '<span class="type-tag">' + esc(type) + '</span>';
     html += '<span class="memory-detail-importance">' + window.t("detail.importance") + ': ' + importance + '/10</span>';
-    if (quality === "low") {
-      html += '<span class="type-tag is-warning">' + esc(window.t("detail.qualityLow")) + '</span>';
-    }
     html += '</div>';
 
     // 操作按钮
@@ -252,40 +238,29 @@ export class PeekPanel {
     html += '<div class="peek-section"><div class="peek-section-title">' + window.t("detail.content") + '</div>';
     html += '<div class="memory-detail-content" id="detail-content-display">' + esc(content) + '</div></div>';
 
-    if (memorizeReason) {
-      html += '<div class="peek-section"><div class="peek-section-title">' + window.t("detail.memorizeReason") + '</div>';
-      html += '<div class="memory-detail-content">' + esc(memorizeReason) + '</div></div>';
-    }
-
-    // 原文可达数十条，默认折叠，避免把关键事实与主题挤出视野
     if (sourceMessages.length) {
-      html += '<details class="peek-details"><summary>' + esc(window.t("detail.sourceMessages", sourceMessages.length)) + '</summary><div class="edit-history-list">';
+      html += '<div class="peek-section"><div class="peek-section-title">' + window.t("detail.sourceMessages", sourceMessages.length) + '</div><div class="edit-history-list">';
       sourceMessages.forEach(message => {
         const sender = message.sender_name || message.sender_id || message.role || "--";
         const time = message.timestamp ? new Date(message.timestamp * 1000).toLocaleString() : "--";
-        const isBot = Boolean(message.is_bot_message) || message.role === "assistant";
         html += '<div class="edit-history-item"><span class="edit-history-time">' + esc(time) + '</span>';
-        html += '<span class="edit-history-desc">' + (isBot ? '<span class="origin-tag">' + esc(window.t("detail.botMessage")) + '</span> ' : "") + '<strong>' + esc(String(sender)) + '</strong> ' + esc(String(message.content || "")) + '</span></div>';
+        html += '<span class="edit-history-desc"><strong>' + esc(String(sender)) + '</strong> ' + esc(String(message.content || "")) + '</span></div>';
       });
-      html += '</div></details>';
+      html += '</div></div>';
     }
 
-    // 图谱上下文小视图 + 明确的定位动作
+    // 图谱上下文小视图
     if (graphCtx && graphCtx.nodes && graphCtx.nodes.length) {
-      html += '<div class="peek-section"><div class="peek-section-title-row">';
-      html += '<span class="peek-section-title">' + window.t("detail.graphContext") + '</span>';
-      html += '<button type="button" class="btn btn-sm btn-secondary" id="peek-focus-graph-btn">' + window.t("graph.focusOnGraph") + '</button>';
-      html += '</div>';
+      html += '<div class="peek-section"><div class="peek-section-title">' + window.t("detail.graphContext") + '</div>';
       html += '<canvas id="peek-mini-graph" class="memory-detail-mini-graph" width="440" height="160" data-memory-id="' + id + '"></canvas></div>';
     }
 
     // 元数据网格
     html += '<div class="peek-section"><div class="peek-section-title">' + window.t("detail.metadata") + '</div>';
     html += '<div class="memory-detail-meta-grid">';
-    html += metaItem(window.t("detail.source"), '<span class="origin-tag' + (quality === "low" ? " is-low" : "") + '">' + esc(originLabel(origin)) + '</span>');
-    if (previousId) {
-      html += metaItem(window.t("detail.previousId"), esc(String(previousId)));
-    }
+    html += metaItem(window.t("detail.status"), statusPill(status));
+    html += metaItem(window.t("detail.type"), '<span class="type-tag">' + esc(type) + '</span>');
+    html += metaItem(window.t("detail.importance"), importance + ' / 10');
     html += metaItem(window.t("detail.sessionId"), '<span style="font-size:11px;font-family:monospace">' + esc(String(sessionId)) + '</span>');
     html += metaItem(window.t("detail.personaId"), '<span style="font-size:11px;font-family:monospace">' + esc(String(personaId)) + '</span>');
     html += metaItem(window.t("detail.created"), esc(created));
@@ -338,14 +313,6 @@ export class PeekPanel {
     if (resummarizeBtn) resummarizeBtn.addEventListener("click", () => this.resummarizeMemory(id));
     if (delBtn) delBtn.addEventListener("click", () => this.deleteSingleMemory(parseInt(id)));
 
-    const focusGraphBtn = document.getElementById("peek-focus-graph-btn");
-    if (focusGraphBtn) {
-      focusGraphBtn.addEventListener("click", () => {
-        this.close();
-        if (window.lmFocusMemoryOnGraph) window.lmFocusMemoryOnGraph(id);
-      });
-    }
-
     // 加载图谱小视图
     const miniCanvas = document.getElementById("peek-mini-graph");
     if (miniCanvas && graphCtx && graphCtx.nodes && graphCtx.nodes.length) {
@@ -361,9 +328,6 @@ export class PeekPanel {
         { retries: 0 }
       );
       this.showToast(window.t("detail.resummarizeSuccess", result.new_memory_id));
-      if (window.lmRefreshMemories) {
-        await window.lmRefreshMemories();
-      }
       await this.renderMemory({ memory_id: result.new_memory_id });
     } catch (error) {
       this.showToast(error.message || window.t("detail.resummarizeFailed"), true);
@@ -379,6 +343,7 @@ export class PeekPanel {
     this.state._detailCache = detail;
     this.state._nodeDetailCache = null;
 
+    const id = detail.memory_id;
     const content = getDetailText(detail);
     const importance = detailImportance(detail).toFixed(1);
     const type = detail.memory_type || "GENERAL";
@@ -387,6 +352,10 @@ export class PeekPanel {
     const keyFacts = Array.isArray(detail.key_facts) ? detail.key_facts : [];
 
     let html = "";
+
+    html += '<div class="memory-detail-header">';
+    html += '<span style="font-size:12px;color:var(--text-secondary)">' + window.t("detail.editingTitle", id) + '</span>';
+    html += '</div>';
 
     html += '<div class="memory-detail-actions">';
     html += '<button class="btn btn-sm btn-primary" id="peek-save-btn"><i data-lucide="save" aria-hidden="true"></i><span>' + window.t("detail.saveBtn") + '</span></button>';
@@ -613,33 +582,16 @@ export class PeekPanel {
     document.getElementById("peek-badge").innerHTML = nodeBadge(nodeData.type);
     document.getElementById("peek-title").textContent = nodeData.label || window.t("graph.unnamedNode");
 
-    const relatedMemories = Array.isArray(nodeData.memories) ? nodeData.memories : [];
-
     let html = '<div class="peek-section">';
     html += '<div class="peek-meta-grid">';
+    html += '<div class="peek-meta-item"><span class="peek-meta-label">' + window.t("detail.nodeMemories") + '</span><span class="peek-meta-value">' + (nodeData.memory_count || 0) + '</span></div>';
     html += '<div class="peek-meta-item"><span class="peek-meta-label">' + window.t("detail.nodeDegree") + '</span><span class="peek-meta-value">' + (nodeData.degree || 0) + '</span></div>';
     html += '<div class="peek-meta-item"><span class="peek-meta-label">' + window.t("detail.nodeEntries") + '</span><span class="peek-meta-value">' + (nodeData.entry_count || 0) + '</span></div>';
     html += '<div class="peek-meta-item"><span class="peek-meta-label">' + window.t("detail.nodeWeight") + '</span><span class="peek-meta-value">' + Number(nodeData.weight || 0).toFixed(2) + '</span></div>';
     html += '</div></div>';
 
-    // 图 → 记忆的唯一入口：此前节点详情只有数字，点不到任何一条记忆
-    if (relatedMemories.length) {
-      html += '<div class="peek-section"><div class="peek-section-title">' + window.t("detail.nodeMemories") + '</div><div class="peek-related-list">';
-      relatedMemories.forEach(memory => {
-        const summary = memory.summary || memory.content || ("#" + memory.memory_id);
-        html += '<button type="button" class="peek-related-item" data-memory-id="' + esc(String(memory.memory_id)) + '">' + esc(String(summary)) + '</button>';
-      });
-      html += '</div></div>';
-    }
-
     document.getElementById("peek-body").innerHTML = html;
-    document.querySelectorAll("#peek-body .peek-related-item").forEach(button => {
-      button.addEventListener("click", () => {
-        const memory = relatedMemories.find(item => String(item.memory_id) === button.dataset.memoryId);
-        if (memory) this.renderMemory(memory);
-      });
-    });
-    this.open(false, false);
+    this.open(false);
   }
 
   /**

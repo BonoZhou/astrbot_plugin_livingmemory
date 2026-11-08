@@ -39,22 +39,14 @@ class FakeElement {
 
 function loadGraphUi(withGraph2D) {
   const calls = [];
-  const posts = [];
   const elements = {};
   const docListeners = {};
   const g2dCalls = [];
   let lastHandler = null;
 
   global.window = {
-    t: (key, ...args) => [key, ...args].join(" "),
+    t: (key) => key,
     AstrBotPluginPage: {
-      async apiPost(path, body) {
-        posts.push({ path, body: body || {} });
-        return {
-          status: "ok",
-          data: { enabled: true, mode: "focus", summary: {}, snapshot: { nodes: [], edges: [] } },
-        };
-      },
       async apiGet(path, params) {
         calls.push({ path, params: params || {} });
         return {
@@ -96,7 +88,7 @@ function loadGraphUi(withGraph2D) {
 
   /* 手动触发 DOMContentLoaded，让 graph-ui init() 挂载事件监听。 */
   if (lastHandler) lastHandler();
-  return { calls, posts, elements, g2dCalls };
+  return { calls, elements, g2dCalls };
 }
 
 async function flushMicrotasks() {
@@ -170,43 +162,4 @@ test("empty snapshot shows empty message instead of layout message", async () =>
   /* 空图布局完成也不应清掉空提示 */
   g2dCalls[0].options.onLayoutDone();
   assert.equal(stateEl.textContent, "graph.canvasEmpty");
-});
-
-test("legend explains node colours and reports a truncated graph", async () => {
-  const { elements } = loadGraphUi(true);
-  window.AstrBotPluginPage.apiGet = async () => ({
-    status: "ok",
-    data: {
-      enabled: true,
-      mode: "overview",
-      summary: {
-        node_type_breakdown: { person: 3 },
-        relation_breakdown: { co_occurs_with: 5 },
-        visible_node_count: 5000,
-        graph_node_count: 9000,
-      },
-      snapshot: { nodes: [{ id: 1, type: "person", label: "Alice", weight: 1 }], edges: [] },
-    },
-  });
-
-  window.ensureGraphScene();
-  await flushMicrotasks();
-
-  const html = elements["graph-legend"].innerHTML;
-  assert.match(html, /graph\.nodePerson/, "图例解释节点颜色");
-  assert.match(html, /graph\.visibleNodes 5000 9000/, "被截断时给出可见/总数");
-  assert.doesNotMatch(html, /co_occurs_with/, "关系 chip 已移除：它无法对应画布颜色");
-});
-
-test("focusing a memory from another page switches pages and queries by id", async () => {
-  const { posts } = loadGraphUi();
-  const switched = [];
-  window.lmSwitchPage = async name => { switched.push(name); };
-
-  await window.lmFocusMemoryOnGraph("77");
-
-  assert.deepEqual(switched, ["graph"], "应先切到图谱页再定位");
-  assert.equal(posts.length, 1);
-  assert.equal(posts[0].path, "page/graph/query");
-  assert.equal(posts[0].body.memory_id, 77, "记忆 ID 由调用方传入，不需要手输");
 });

@@ -3,11 +3,47 @@
    Notion-inspired, minimalist, modern
    ================================================================ */
 
-/* ----- Design Tokens ------------------------------------------- */
-/* 这里只保留本文件独有的尺度 token。调色板由 art-direction.css 掌控：它在
-   styles.css 之后加载并以同名变量覆盖，此前两处各存一份颜色、永远只有后者
-   生效，改色时容易改到不生效的那一份。 */
+/* ----- Design Tokens (Light) ----------------------------------- */
 :root {
+  /* Surface */
+  --bg-app: #f8f9fa;
+  --bg-sidebar: #f1f3f5;
+  --bg-card: #ffffff;
+  --bg-hover: #f1f3f5;
+  --bg-active: #e9ecef;
+  --bg-input: #f1f3f5;
+  --bg-overlay: rgba(248, 249, 250, 0.85);
+
+  /* Border */
+  --border-light: #e9ecef;
+  --border-normal: #dee2e6;
+  --border-focus: #adb5bd;
+
+  /* Text */
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --text-tertiary: #adb5bd;
+  --text-inverse: #ffffff;
+
+  /* Accent */
+  --accent: #4c6ef5;
+  --accent-light: #edf2ff;
+  --accent-hover: #3b5bdb;
+  --success: #2b8a3e;
+  --success-light: #ebfbee;
+  --warning: #e67700;
+  --warning-light: #fff4e6;
+  --danger: #c92a2a;
+  --danger-light: #fff5f5;
+  --danger-hover: #e03131;
+
+  /* Graph Node Colors */
+  --node-topic: #7c6fca;
+  --node-person: #2f9e8b;
+  --node-fact: #c99a16;
+  --node-summary: #c8648d;
+  --node-other: #8b949e;
+
   /* Spacing */
   --space-1: 4px;
   --space-2: 8px;
@@ -33,12 +69,46 @@
   --shadow-lg: 0 8px 24px rgba(0,0,0,0.08);
 
   /* Transition */
+  --transition-fast: 120ms ease;
+  --transition-normal: 200ms ease;
   --transition-slow: 300ms ease;
+  --transition-panel: 250ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Layout */
+  --sidebar-width: 220px;
+  --header-height: 48px;
 }
 
 /* ----- Design Tokens (Dark) ------------------------------------ */
-/* 深色下只有阴影需要覆盖：颜色由 art-direction.css 的深色块负责。 */
 [data-theme="dark"] {
+  --bg-app: #1a1b1e;
+  --bg-sidebar: #141517;
+  --bg-card: #25262b;
+  --bg-hover: #2c2e33;
+  --bg-active: #373a40;
+  --bg-input: #25262b;
+  --bg-overlay: rgba(26, 27, 30, 0.85);
+
+  --border-light: #2c2e33;
+  --border-normal: #373a40;
+  --border-focus: #5c5f66;
+
+  --text-primary: #e9ecef;
+  --text-secondary: #909296;
+  --text-tertiary: #5c5f66;
+  --text-inverse: #1a1b1e;
+
+  --accent: #748ffc;
+  --accent-light: #1c2333;
+  --accent-hover: #91a7ff;
+  --success: #40c057;
+  --success-light: #0b2817;
+  --warning: #f59f00;
+  --warning-light: #2b1a00;
+  --danger: #ff6b6b;
+  --danger-light: #1f0d0d;
+  --danger-hover: #ff8787;
+
   --shadow-xs: 0 1px 2px rgba(0,0,0,0.15);
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
@@ -484,19 +554,6 @@ body {
 }
 
 .memory-page-body .table-container {
-  position: relative;
-}
-
-.memory-page-body #memory-feedback {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 2;
-  background: var(--bg-card);
-}
-
-.memory-page-body .table-container {
   flex: 1;
   min-height: 160px;
 }
@@ -912,50 +969,6 @@ body {
   margin-bottom: var(--space-3);
 }
 
-/* 区块标题 + 右侧动作（如「在图谱中定位」） */
-.peek-section-title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-}
-
-.peek-section-title-row .peek-section-title {
-  margin-bottom: 0;
-}
-
-/* 图节点关联记忆：图 → 记忆的入口 */
-.peek-related-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.peek-related-item {
-  display: block;
-  width: 100%;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-  background: var(--bg-card);
-  color: var(--text-primary);
-  font-size: 12px;
-  font-family: inherit;
-  line-height: 1.5;
-  text-align: left;
-  cursor: pointer;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  transition: border-color var(--transition-fast), background var(--transition-fast);
-}
-
-.peek-related-item:hover {
-  border-color: var(--border-normal);
-  background: var(--bg-hover);
-}
-
 .peek-meta-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -991,16 +1004,13 @@ body {
 }
 
 
-.peek-node-badge.topic { background: var(--bg-hover); color: var(--node-topic); }
+.peek-node-badge.topic { background: rgba(121,80,242,0.12); color: var(--node-topic); }
 
-.peek-node-badge.person { background: var(--bg-hover); color: var(--node-person); }
+.peek-node-badge.person { background: rgba(32,201,151,0.12); color: var(--node-person); }
 
-.peek-node-badge.fact { background: var(--bg-hover); color: var(--node-fact); }
+.peek-node-badge.fact { background: rgba(252,196,25,0.15); color: #946500; }
 
-.peek-node-badge.summary { background: var(--bg-hover); color: var(--node-summary); }
-
-.peek-node-badge.other,
-.peek-node-badge.unknown { background: var(--bg-hover); color: var(--node-other); }
+.peek-node-badge.summary { background: rgba(240,101,149,0.12); color: var(--node-summary); }
 
 
 /* Peek key facts */
@@ -1130,13 +1140,18 @@ body {
 
 /* Mini graph in detail */
 .memory-detail-mini-graph {
-  display: block;
   width: 100%;
   height: 160px;
   background: var(--bg-hover);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
   margin-bottom: var(--space-4);
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.memory-detail-mini-graph:hover {
+  opacity: 0.85;
 }
 
 /* Status & Type edit selects */
@@ -1237,7 +1252,6 @@ body {
 
 .recall-form-row {
   display: flex;
-  flex-wrap: wrap;
   gap: var(--space-4);
   align-items: flex-end;
   margin-top: var(--space-4);
@@ -1328,18 +1342,13 @@ body {
   gap: var(--space-1);
   padding: 2px 10px;
   border-radius: var(--radius-full);
-  font-size: 12px;
-  font-weight: 500;
-  background: var(--bg-hover);
-  color: var(--text-secondary);
-  font-variant-numeric: tabular-nums;
-}
-
-.result-score-badge b,
-.recall-result-score b {
-  color: var(--text-primary);
+  font-size: 13px;
   font-weight: 600;
 }
+
+.result-score-badge.high   { background: var(--success-light); color: var(--success); }
+.result-score-badge.medium { background: var(--warning-light); color: var(--warning); }
+.result-score-badge.low    { background: var(--bg-hover); color: var(--text-secondary); }
 
 .result-content,
 .recall-result-content {
@@ -1369,72 +1378,6 @@ body {
   gap: var(--space-4);
   flex-wrap: wrap;
   font-size: 12px;
-}
-
-.recall-result-routes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-}
-
-.recall-route-chip {
-  display: inline-flex;
-  align-items: baseline;
-  gap: var(--space-1);
-  padding: 2px 8px;
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-full);
-  font-size: 11px;
-  color: var(--text-secondary);
-}
-
-.recall-route-chip b {
-  font-weight: 600;
-  color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-}
-
-/* 记忆来源标签：列表行与详情共用，让写入方一眼可辨 */
-.origin-tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 0 5px;
-  margin-right: 6px;
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  font-size: 11px;
-  line-height: 16px;
-  vertical-align: middle;
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-
-.origin-tag.is-low {
-  border-color: var(--warning);
-  color: var(--warning);
-}
-
-.type-tag.is-warning {
-  border-color: var(--warning);
-  color: var(--warning);
-}
-
-/* 原始消息默认折叠，展开前不占用阅读空间 */
-.peek-details > summary {
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  padding: var(--space-2) 0;
-}
-
-.peek-details > summary:hover {
-  color: var(--text-primary);
-}
-
-.peek-details > .edit-history-list {
-  margin-top: var(--space-2);
 }
 
 /* ----- System Page --------------------------------------------- */
@@ -1476,7 +1419,7 @@ body {
 .bar-row-label {
   font-size: 11px;
   color: var(--text-secondary);
-  width: 80px;
+  width: 40px;
   text-align: right;
   flex-shrink: 0;
 }
@@ -1494,6 +1437,7 @@ body {
   border-radius: var(--radius-sm);
   background: var(--accent);
   transition: width var(--transition-slow);
+  min-width: 2px;
 }
 
 .bar-row-value {
@@ -1889,7 +1833,27 @@ body {
   border: 1px solid #ffc107;
 }
 
+/* Prompt Warning Banner */
 
+.prompt-warning {
+  background: var(--accent-light);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.prompt-warning-title {
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: var(--space-1);
+}
+
+.prompt-warning-text {
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
 
 /* Prompt Usage Note */
 
@@ -1917,6 +1881,14 @@ body {
   gap: var(--space-3);
   margin-bottom: var(--space-3);
   flex-wrap: wrap;
+}
+
+.prompt-editor-subtitle {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .prompt-editor-title {

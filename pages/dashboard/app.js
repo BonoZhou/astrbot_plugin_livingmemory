@@ -11,6 +11,8 @@ import {
   SystemPage,
   PromptPage,
   esc,
+  statusPill,
+  nodeBadge,
 } from "./modules/index.js";
 
 (() => {
@@ -242,15 +244,8 @@ import {
       document.getElementById("gs-edges").textContent = data.graph_edges || 0;
 
       const sessions = data.sessions || {};
-      const sessionIds = typeof sessions === "object" ? Object.keys(sessions) : [];
-      document.getElementById("gs-sessions").textContent = sessionIds.length;
-
-      const sessionOptions = document.getElementById("graph-session-options");
-      if (sessionOptions) {
-        sessionOptions.innerHTML = sessionIds
-          .map(id => '<option value="' + esc(String(id)) + '"></option>')
-          .join("");
-      }
+      const sessionCount = typeof sessions === "object" ? Object.keys(sessions).length : 0;
+      document.getElementById("gs-sessions").textContent = sessionCount;
     } catch (e) {
       showToast(e.message || window.t("misc.statsFail"), true);
     }
@@ -282,7 +277,6 @@ import {
     memoryPage.initEventListeners();
     recallPage.initEventListeners();
     systemPage.initEventListeners();
-    document.getElementById("prompt-retry")?.addEventListener("click", () => promptPage.fetch());
 
     document.getElementById("peek-close").addEventListener("click", () => peekPanel.requestClose());
     document.getElementById("peek-overlay").addEventListener("click", () => peekPanel.requestClose());
@@ -312,12 +306,21 @@ import {
      ================================================================ */
   window.lmState = state;
   window.lmShowToast = showToast;
-  window.lmSwitchPage = (name) => switchPage(name);
+  window.lmApiRequest = (path, options) => {
+    // 兼容旧 API，转发到 ApiClient
+    if (options && options.method === "POST") {
+      return api.request(path, options);
+    }
+    return api.request(path, options || {});
+  };
   window.lmOpenPeekNode = (nodeData) => peekPanel.renderNode(nodeData);
   window.lmOpenPeekMemory = (memory) => peekPanel.renderMemory(memory);
   window.lmClosePeek = () => peekPanel.requestClose();
   window.lmFetchGraphStats = fetchGraphStats;
   window.lmRefreshMemories = () => memoryPage.fetch();
+  window.lmEsc = esc;
+  window.lmStatusPill = statusPill;
+  window.lmNodeBadge = nodeBadge;
   window.lmHydrateIcons = hydrateIcons;
 
   // 图谱小视图绘制函数（如果需要）

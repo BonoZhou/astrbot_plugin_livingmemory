@@ -100,20 +100,6 @@ class HybridRetriever:
         # MMR 多样性参数
         self.mmr_lambda = self.config.get("mmr_lambda", 0.7)  # 相关性 vs 多样性权衡
 
-        # 融合策略：score=分数归一化加权融合（默认），rrf=排名级 RRF
-        self.fusion_mode = str(self.config.get("fusion_mode", "score") or "score").lower()
-        self.fusion_bm25_weight = min(
-            1.0, max(0.0, float(self.config.get("fusion_bm25_weight", 0.5)))
-        )
-        # 每路召回 k 的多少倍候选再融合：只取 k 会让融合在很小的候选池里重排
-        self.candidate_multiplier = max(
-            1, min(10, int(self.config.get("recall_candidate_multiplier", 3) or 1))
-        )
-        # 两路共识奖励：中文改写查询上明显提升首位命中
-        self.fusion_agreement_bonus = min(
-            1.0, max(0.0, float(self.config.get("fusion_agreement_bonus", 0.25)))
-        )
-
     async def _search_route(
         self, route_name: str, search_coro
     ) -> tuple[list, Exception | None]:
@@ -193,9 +179,7 @@ class HybridRetriever:
         if not query or not query.strip():
             return []
 
-        candidate_k = max(k, k * self.candidate_multiplier)
-        if self.rerank_enabled:
-            candidate_k = max(candidate_k, self.rerank_candidates)
+        candidate_k = max(k, self.rerank_candidates) if self.rerank_enabled else k
         # Retrieve enough candidates before reranking, not just before fusion.
         (
             (bm25_results, bm25_error),
@@ -269,18 +253,9 @@ class HybridRetriever:
         ) > min(k, fuse_top_k):
             diagnostics["candidate_limited"] = True
 
-        if self.fusion_mode == "rrf":
-            fused_results = self.rrf_fusion.fuse(
-                rrf_bm25_results, rrf_vector_results, top_k=fuse_top_k
-            )
-        else:
-            fused_results = self.rrf_fusion.fuse_scores(
-                rrf_bm25_results,
-                rrf_vector_results,
-                top_k=fuse_top_k,
-                bm25_weight=self.fusion_bm25_weight,
-                agreement_bonus=self.fusion_agreement_bonus,
-            )
+        fused_results = self.rrf_fusion.fuse(
+            rrf_bm25_results, rrf_vector_results, top_k=fuse_top_k
+        )
 
         if not fused_results:
             return []
